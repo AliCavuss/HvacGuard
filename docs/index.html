@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HvacGuard – Live Demo</title>
+<meta name="description" content="Live browser demo of HvacGuard – a .NET / ASP.NET Core MVC portfolio project by Ali Çavuş.">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: control-room shell — fixed sidebar + scrolling work area; collapses to a top bar on phones. Single dark look, like the real app. */
+:root {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --surface: #111a2c;
+  --surface-2: #16223a;
+  --border: #22314f;
+  --text: #dbe4f3;
+  --muted: #8a9bb8;
+  --accent: #2dd4bf;
+  --accent-2: #38bdf8;
+  --accent-ink: #042f2e;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --info: #60a5fa;
+  --offline: #64748b;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 var(--font-body); font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: none; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--font-mono); }
+code { color: var(--accent-2); font-size: .9em; }
+
+.banner { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; background: rgba(45,212,191,.1); border-bottom: 1px solid var(--border); padding-block: .5rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); font-size: .82rem; color: var(--text); }
+.banner strong { color: var(--accent); }
+
+.shell { display: flex; min-height: calc(100% - 37px); }
+.sidebar { width: 230px; flex-shrink: 0; background: linear-gradient(180deg, #0e1729, var(--bg)); border-right: 1px solid var(--border); padding: 1.25rem .8rem; display: flex; flex-direction: column; gap: .2rem; }
+.brand { display: flex; align-items: center; gap: .55rem; font-size: 1.2rem; padding: 0 .5rem 1rem; color: var(--text); }
+.brand svg { color: var(--accent); }
+.nav-btn { display: flex; align-items: center; gap: .6rem; width: 100%; text-align: left; background: none; border: 0; color: var(--muted); padding: .55rem .75rem; border-radius: .5rem; font-weight: 500; cursor: pointer; }
+.nav-btn:hover { color: var(--text); background: var(--surface-2); }
+.nav-btn[aria-current="page"] { color: #fff; background: rgba(45,212,191,.12); box-shadow: inset 3px 0 0 var(--accent); }
+.nav-btn .count { margin-left: auto; background: var(--crit); color: #fff; border-radius: 999px; font-size: .72rem; padding: 0 .45rem; font-weight: 600; }
+.nav-section { text-transform: uppercase; font-size: .68rem; letter-spacing: .08em; color: var(--offline); margin: 1rem .75rem .3rem; }
+.side-foot { margin-top: auto; border-top: 1px solid var(--border); padding: 1rem .5rem 0; font-size: .8rem; color: var(--muted); display: grid; gap: .3rem; }
+.live { display: flex; align-items: center; gap: .45rem; }
+.live .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+
+main { flex: 1; min-width: 0; padding-block: 1.6rem 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) { main { padding-left: 2rem; padding-right: 2rem; } }
+@media (max-width: 899px) {
+  .shell { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; padding: .6rem max(16px, env(safe-area-inset-right, 0px)) .6rem max(16px, env(safe-area-inset-left, 0px)); }
+  .brand { padding: 0 .5rem 0 0; width: 100%; }
+  .nav-btn { width: auto; }
+  .nav-section, .side-foot { display: none; }
+}
+
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+h1 { font-size: 1.55rem; margin: 0 0 .2rem; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 65ch; }
+.section-title { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin: 0 0 .8rem; }
+.crumbs { font-size: .82rem; color: var(--muted); margin-bottom: .6rem; }
+.crumbs button { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: .42rem .8rem; border-radius: .45rem; cursor: pointer; font-weight: 500; font-size: .85rem; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: #0ea5a4; border-color: #0ea5a4; color: #fff; }
+.btn.warn { background: var(--warn); border-color: var(--warn); color: #1f1300; }
+.btn.success { background: var(--ok); border-color: var(--ok); color: #052e16; }
+.btn.danger { background: transparent; border-color: var(--crit); color: var(--crit); }
+.btn.sm { padding: .22rem .55rem; font-size: .78rem; }
+
+.badge { display: inline-block; font-size: .72rem; font-weight: 600; border-radius: .35rem; padding: .12rem .45rem; white-space: nowrap; }
+.b-crit { background: var(--crit); color: #fff; }
+.b-warn { background: var(--warn); color: #1f1300; }
+.b-info { background: var(--info); color: #071a33; }
+.b-ok { background: var(--ok); color: #052e16; }
+.b-muted { background: #334155; color: var(--text); }
+.b-primary { background: #0ea5a4; color: #fff; }
+.blink { animation: blink 1.2s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .9rem; margin-bottom: 1.6rem; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .95rem 1.05rem; }
+.kpi-label { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.kpi-value { font-family: var(--font-mono); font-size: 1.9rem; font-weight: 600; line-height: 1.25; }
+.kpi-value small { font-size: 1rem; color: var(--muted); }
+.kpi-sub { font-size: .8rem; color: var(--muted); }
+.kpi.crit .kpi-value { color: var(--crit); }
+
+.dash { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; }
+@media (max-width: 1199px) { .dash { grid-template-columns: minmax(0, 1fr); } }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .9rem; }
+.unit-card { display: block; width: 100%; text-align: left; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--ok); border-radius: .75rem; padding: .95rem 1.05rem; cursor: pointer; transition: transform .12s ease, border-color .12s ease; }
+.unit-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.unit-top { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
+.unit-tag { font-family: var(--font-mono); font-weight: 600; color: var(--accent-2); }
+.unit-name { font-weight: 600; }
+.unit-loc { font-size: .78rem; color: var(--muted); }
+.pill { font-size: .7rem; font-weight: 600; border-radius: 999px; padding: .18rem .6rem; background: rgba(34,197,94,.15); color: var(--ok); }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem .7rem; margin: .85rem 0 .55rem; }
+.m-label { display: block; font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.m-val { font-family: var(--font-mono); font-size: .92rem; }
+.unit-foot { border-top: 1px solid var(--border); padding-top: .45rem; font-size: .76rem; color: var(--muted); }
+.unit-card.warning { border-left-color: var(--warn); }
+.unit-card.warning .pill { background: rgba(245,158,11,.15); color: var(--warn); }
+.unit-card.critical { border-left-color: var(--crit); box-shadow: 0 0 0 1px rgba(239,68,68,.25), 0 0 24px rgba(239,68,68,.08); }
+.unit-card.critical .pill { background: rgba(239,68,68,.18); color: var(--crit); animation: blink 1.2s steps(2, start) infinite; }
+.flash { animation: flash .8s ease-out; }
+@keyframes flash { from { color: var(--accent); } to { color: inherit; } }
+
+.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.feed li { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--offline); border-radius: .5rem; padding: .55rem .7rem; font-size: .84rem; }
+.feed li.Critical { border-left-color: var(--crit); }
+.feed li.Warning { border-left-color: var(--warn); }
+.feed .row1 { display: flex; justify-content: space-between; gap: .5rem; }
+.feed .when { color: var(--muted); font-size: .76rem; }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; overflow: hidden; }
+.panel-head { background: var(--surface-2); border-bottom: 1px solid var(--border); padding: .6rem .9rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.panel-body { padding: .9rem; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+td.nowrap { white-space: nowrap; }
+.muted { color: var(--muted); }
+.small { font-size: .8rem; }
+.empty { text-align: center; color: var(--muted); padding: 1.6rem; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .8rem; margin-bottom: 1.2rem; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .8rem .95rem; }
+.tile .val { font-family: var(--font-mono); font-size: 1.45rem; font-weight: 600; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
+.chart-box { position: relative; height: 230px; }
+.two-col { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1rem; }
+@media (max-width: 999px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: .65rem .9rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.list li:last-child { border-bottom: 0; }
+
+.filters { display: flex; gap: .6rem; flex-wrap: wrap; align-items: end; background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .7rem; margin-bottom: 1rem; }
+.field { display: grid; gap: .25rem; min-width: 0; }
+.field label { font-size: .75rem; color: var(--muted); }
+select, input[type="text"], input[type="date"], textarea { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: .4rem; padding: .4rem .55rem; font: inherit; max-width: 100%; }
+textarea { width: 100%; resize: vertical; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .9rem; }
+.form-grid .full { grid-column: 1 / -1; }
+.field input, .field select, .field textarea { width: 100%; }
+.err { color: var(--crit); font-size: .8rem; min-height: 1em; }
+.note { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35); border-radius: .5rem; padding: .55rem .75rem; font-size: .84rem; margin-bottom: .9rem; }
+
+.timeline { list-style: none; margin: 0; padding: 0 0 0 1rem; border-left: 2px solid var(--border); display: grid; gap: .6rem; }
+.timeline li { position: relative; padding-left: .7rem; font-size: .85rem; }
+.timeline li::before { content: ""; position: absolute; left: -1.38rem; top: .45rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+
+.toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: .5rem; z-index: 20; width: min(340px, calc(100% - 32px)); }
+.toast { background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--warn); border-radius: .55rem; padding: .6rem .8rem; font-size: .84rem; box-shadow: 0 8px 24px rgba(0,0,0,.35); animation: slide .3s ease-out; }
+.toast.Critical { border-left-color: var(--crit); }
+@keyframes slide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="banner"><strong>Live demo.</strong> <span>HvacGuard itself is an ASP.NET Core MVC + SQL Server application – this page reproduces its screens and business rules in your browser with sample data (nothing is saved). <a href="https://github.com/AliCavuss/HvacGuard" style="color:inherit;text-decoration:underline">Source code &amp; setup on GitHub</a></span></div>
+
+<div class="shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h16a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>
+      <span>Hvac<strong>Guard</strong></span>
+    </div>
+    <button class="nav-btn" data-view="dashboard" id="nav-dashboard">Dashboard</button>
+    <button class="nav-btn" data-view="alarms" id="nav-alarms">Alarms <span class="count" id="nav-count" hidden>0</span></button>
+    <button class="nav-btn" data-view="history" id="nav-history">Alarm history</button>
+    <button class="nav-btn" data-view="workorders" id="nav-workorders">Work orders</button>
+    <div class="nav-section">Administration</div>
+    <button class="nav-btn" data-view="rules" id="nav-rules">Alarm rules</button>
+    <div class="side-foot">
+      <div class="live"><span class="dot"></span>Live · every 3 s</div>
+      <div>admin@hvacguard.local</div>
+    </div>
+  </aside>
+  <main id="view" tabindex="-1"></main>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------------- Data (same demo fleet as DbSeeder.cs) ----------------
+  const vessels = [
+    { id: 1, name: 'Aurora Spirit', imo: '9345128', type: 'Ro-Pax Ferry', flag: 'Malta' },
+    { id: 2, name: 'Northern Star', imo: '9481271', type: 'LNG Carrier', flag: 'Marshall Islands' },
+    { id: 3, name: 'Baltic Pearl', imo: '9620384', type: 'Chemical Tanker', flag: 'Türkiye' }
+  ];
+  const unitSeed = [
+    [1, 'AHU-01', 'Passenger lounge', 'Deck 7 – Fwd', 18, 12000], [1, 'AHU-02', 'Main restaurant', 'Deck 6 – Mid', 17.5, 15000],
+    [1, 'AHU-03', 'Cabins forward', 'Deck 5 – Fwd', 19, 9000], [1, 'AHU-04', 'Engine control room', 'Deck 2 – Aft', 16, 6000],
+    [2, 'AHU-01', 'Accommodation', 'A-Deck', 18, 10000], [2, 'AHU-02', 'Wheelhouse', 'Navigation bridge', 19, 4000],
+    [2, 'AHU-03', 'Engine control room', 'Engine room – Upper', 16.5, 5000],
+    [3, 'AHU-01', 'Accommodation', 'B-Deck', 18, 8000], [3, 'AHU-02', 'Galley', 'Main deck', 17, 5500], [3, 'AHU-03', 'Wheelhouse', 'Navigation bridge', 19, 3500]
+  ];
+  const units = unitSeed.map((u, i) => ({ id: i + 1, vesselId: u[0], tag: u[1], name: u[2], location: u[3], setpoint: u[4], airflow: u[5], history: [], latest: null }));
+  const vesselOf = u => vessels.find(v => v.id === u.vesselId);
+
+  const PARAMS = {
+    SupplyAirTemperature: { label: 'Supply air temperature', unit: '°C', key: 'supply' },
+    ReturnAirTemperature: { label: 'Return air temperature', unit: '°C', key: 'ret' },
+    RelativeHumidity: { label: 'Relative humidity', unit: '%RH', key: 'rh' },
+    FanSpeed: { label: 'Fan speed', unit: '%', key: 'fan' },
+    FilterPressureDrop: { label: 'Filter differential pressure', unit: 'Pa', key: 'dp' }
+  };
+  let ruleId = 0;
+  const rule = (name, parameter, condition, threshold, deadband, severity) => ({ id: ++ruleId, name, parameter, condition, threshold, deadband, severity, enabled: true });
+  const rules = [
+    rule('Supply air temperature high', 'SupplyAirTemperature', 'Above', 22, 0.5, 'Warning'),
+    rule('Supply air temperature high-high', 'SupplyAirTemperature', 'Above', 25, 0.5, 'Critical'),
+    rule('Supply air temperature low', 'SupplyAirTemperature', 'Below', 12, 0.5, 'Warning'),
+    rule('Return air temperature high', 'ReturnAirTemperature', 'Above', 30, 0.5, 'Warning'),
+    rule('Relative humidity high', 'RelativeHumidity', 'Above', 65, 2, 'Warning'),
+    rule('Supply fan failure', 'FanSpeed', 'Below', 20, 5, 'Critical'),
+    rule('Filter clogged – replacement due', 'FilterPressureDrop', 'Above', 250, 10, 'Warning'),
+    rule('Filter clogged – critical', 'FilterPressureDrop', 'Above', 320, 10, 'Critical')
+  ];
+  const describe = r => `${r.condition === 'Above' ? '>' : '<'} ${r.threshold} ${PARAMS[r.parameter].unit}`;
+  const violated = (r, v) => r.condition === 'Above' ? v > r.threshold : v < r.threshold;
+  const normal = (r, v) => r.condition === 'Above' ? v <= r.threshold - r.deadband : v >= r.threshold + r.deadband;
+
+  // ---------------- AhuSimulator.cs port ----------------
+  function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+  function makeSim(u, faultP) {
+    const r = rng(u.id * 7919), NOM = 78;
+    const st = { supply: u.setpoint, ret: u.setpoint + 5.5, rh: 50 + r() * 6, fan: NOM, clog: 120 + r() * 140, fault: 0, left: 0 };
+    const approach = (c, t, rate, noise) => c + (t - c) * rate + (r() - 0.5) * 2 * noise;
+    return function next() {
+      if (!st.fault && r() < faultP) { st.fault = 1 + Math.floor(r() * 3); st.left = 40 + Math.floor(r() * 70); }
+      let sT = u.setpoint, hT = 52, fT = NOM;
+      if (st.fault === 1) { sT = u.setpoint + 10; hT = 66; } else if (st.fault === 2) { fT = 0; sT = u.setpoint + 4; } else if (st.fault === 3) { hT = 74; }
+      st.supply = approach(st.supply, sT, .12, .12);
+      st.ret = approach(st.ret, st.supply + 5.5, .08, .1);
+      st.rh = Math.min(98, Math.max(15, approach(st.rh, hT, .08, .5)));
+      st.fan = Math.min(100, Math.max(0, approach(st.fan, fT, .3, .8)));
+      st.clog += .06 + r() * .04; if (st.clog > 360) st.clog = 110;
+      const ratio = st.fan / NOM;
+      const dp = Math.max(0, st.clog * ratio * ratio + (r() - .5) * 3);
+      if (st.fault && --st.left <= 0) st.fault = 0;
+      return { supply: +st.supply.toFixed(2), ret: +st.ret.toFixed(2), rh: +st.rh.toFixed(1), fan: +st.fan.toFixed(1), dp: +dp.toFixed(1) };
+    };
+  }
+  // Faults are a bit more frequent than in the real app so the preview shows alarms quickly.
+  units.forEach(u => { u.sim = makeSim(u, 0.006); });
+
+  // ---------------- State: alarms + work orders ----------------
+  let alarmId = 1000, woId = 0;
+  const alarms = [];
+  const now = () => new Date();
+  const user = 'admin@hvacguard.local';
+
+  function raise(u, r, value, at) {
+    const a = { id: ++alarmId, unitId: u.id, ruleId: r.id, parameter: r.parameter, severity: r.severity, value, threshold: r.threshold,
+      message: `${r.name}: ${value.toFixed(1)} ${PARAMS[r.parameter].unit} (limit ${describe(r)})`, raisedAt: at, clearedAt: null, ackAt: null, ackBy: null };
+    alarms.push(a); return a;
+  }
+  const isOpen = a => !a.clearedAt || !a.ackAt;
+  const state = a => !a.clearedAt ? (a.ackAt ? 'Active – acknowledged' : 'Active – unacknowledged') : (a.ackAt ? 'Closed' : 'Cleared – unacknowledged');
+  const stateBadge = a => !a.clearedAt ? (a.ackAt ? 'b-warn' : 'b-crit blink') : (a.ackAt ? 'b-muted' : 'b-info');
+
+  // History: closed alarms over the last two weeks (like the seeder).
+  (function seedHistory() {
+    const r = rng(42);
+    for (let i = 0; i < 40; i++) {
+      const u = units[Math.floor(r() * units.length)], ru = rules[Math.floor(r() * rules.length)];
+      const at = new Date(Date.now() - (1 + Math.floor(r() * 13)) * 864e5 - Math.floor(r() * 1440) * 6e4);
+      const v = ru.condition === 'Above' ? ru.threshold + .5 + r() * 3 : ru.threshold - .5 - r() * 3;
+      const a = raise(u, ru, v, at);
+      a.ackAt = new Date(at.getTime() + (1 + Math.floor(r() * 19)) * 6e4); a.ackBy = r() < .5 ? 'engineer@hvacguard.local' : 'tech@hvacguard.local';
+      a.clearedAt = new Date(at.getTime() + (20 + Math.floor(r() * 160)) * 6e4);
+    }
+  })();
+
+  const workOrders = [];
+  function wo(o) { const w = Object.assign({ id: ++woId, status: 'Open', createdAt: now(), startedAt: null, closedAt: null, notes: null, alarmId: null, createdBy: 'admin@hvacguard.local' }, o); workOrders.push(w); return w; }
+  const days = d => new Date(Date.now() + d * 864e5);
+  wo({ title: 'Replace F7 bag filters', description: 'Filter ΔP trending above 250 Pa. Replace bag filters and reset ΔP switch.', unitId: 1, priority: 'High', assignedTo: 'engineer@hvacguard.local', createdAt: days(-2), dueDate: days(-1), status: 'In progress', startedAt: days(-1.1) });
+  wo({ title: 'Quarterly inspection – cooling coil', description: 'Clean coil fins, check drain pan and condensate pump.', unitId: 2, priority: 'Medium', assignedTo: 'tech@hvacguard.local', createdAt: days(-1), dueDate: days(6) });
+  wo({ title: 'Supply fan bearing noise', description: 'Crew reported noise from supply fan. Check bearings and belt tension.', unitId: 5, priority: 'Urgent', assignedTo: 'engineer@hvacguard.local', createdAt: days(-.25), dueDate: days(1) });
+  wo({ title: 'Calibrate humidity sensor', description: 'RH reading deviates ~5 % from handheld reference.', unitId: 8, priority: 'Low', assignedTo: 'tech@hvacguard.local', createdAt: days(-10), dueDate: days(-5), status: 'Completed', startedAt: days(-9), closedAt: days(-8), notes: 'Sensor recalibrated against reference hygrometer. Deviation now < 1 %.' });
+  wo({ title: 'Spare parts order – V-belts', description: 'Waiting for spare V-belts to be delivered at next port call.', unitId: 3, priority: 'Medium', assignedTo: 'tech@hvacguard.local', createdAt: days(-4), dueDate: days(10), status: 'On hold', startedAt: days(-3) });
+  const closed = w => w.status === 'Completed' || w.status === 'Cancelled';
+  const overdue = w => !closed(w) && w.dueDate && w.dueDate < now();
+  const TRANSITIONS = { 'Open': ['In progress', 'Cancelled'], 'In progress': ['On hold', 'Completed', 'Cancelled'], 'On hold': ['In progress', 'Cancelled'], 'Completed': [], 'Cancelled': [] };
+  const woNo = w => 'WO-' + String(w.id).padStart(5, '0');
+
+  // ---------------- Telemetry pipeline (TelemetryService + AlarmEvaluator) ----------------
+  function ingest(u, s, at) {
+    const reading = Object.assign({ t: at }, s);
+    u.latest = reading; u.history.push(reading); if (u.history.length > 600) u.history.shift();
+    const raised = [], cleared = [];
+    alarms.filter(a => a.unitId === u.id && !a.clearedAt).forEach(a => {
+      const r = rules.find(x => x.id === a.ruleId);
+      if (!r || !r.enabled || normal(r, s[PARAMS[a.parameter].key])) { a.clearedAt = at; cleared.push(a); }
+    });
+    rules.filter(r => r.enabled).forEach(r => {
+      const v = s[PARAMS[r.parameter].key];
+      if (violated(r, v) && !alarms.some(a => a.unitId === u.id && a.ruleId === r.id && !a.clearedAt)) raised.push(raise(u, r, v, at));
+    });
+    return { raised, cleared };
+  }
+  // One hour of history at 30 s, without faults (like the seeder).
+  units.forEach(u => { const quiet = makeSim(u, 0); for (let i = 120; i >= 1; i--) { const s = quiet(); u.history.push(Object.assign({ t: new Date(Date.now() - i * 30000) }, s)); u.latest = u.history[u.history.length - 1]; } });
+  // Warm-up so the first frame already shows a few live alarms.
+  for (let i = 0; i < 160; i++) units.forEach(u => ingest(u, u.sim(), new Date(Date.now() - (160 - i) * 3000)));
+
+  // ---------------- Helpers ----------------
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const utc = (d, withDate = true) => d ? `${withDate ? `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` : ''}${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC` : '—';
+  const date = d => d ? `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` : '—';
+  const dur = (a) => { const ms = ((a.clearedAt || now()) - a.raisedAt) / 1000; return ms < 60 ? `${Math.floor(ms)}s` : ms < 3600 ? `${Math.floor(ms / 60)} min` : ms < 86400 ? `${Math.floor(ms / 3600)} h ${Math.floor(ms % 3600 / 60)} min` : `${Math.floor(ms / 86400)} d`; };
+  const sevBadge = s => s === 'Critical' ? 'b-crit' : s === 'Warning' ? 'b-warn' : 'b-info';
+  const prioBadge = p => ({ Urgent: 'b-crit', High: 'b-warn', Medium: 'b-primary', Low: 'b-muted' }[p]);
+  const statusBadge = s => ({ 'Open': 'b-primary', 'In progress': 'b-info', 'On hold': 'b-warn', 'Completed': 'b-ok', 'Cancelled': 'b-muted' }[s]);
+  const highest = u => { const act = alarms.filter(a => a.unitId === u.id && !a.clearedAt); return act.some(a => a.severity === 'Critical') ? 'Critical' : act.length ? 'Warning' : null; };
+  const unitLabel = u => `${vesselOf(u).name} · ${u.tag} – ${u.name}`;
+  const fmt = (v, d) => v == null ? '—' : v.toFixed(d);
+
+  // ---------------- Router ----------------
+  let current = { view: 'dashboard', id: null };
+  let charts = [];
+  function go(view, id = null) {
+    current = { view, id };
+    charts.forEach(c => c.destroy()); charts = [];
+    document.querySelectorAll('.nav-btn').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === view || (view === 'unit' && b.dataset.view === 'dashboard') || (view === 'wo' && b.dataset.view === 'workorders')));
+    document.querySelectorAll('.nav-btn[aria-current]').forEach(b => b.setAttribute('aria-current', 'page'));
+    render();
+    $('#view').scrollTop = 0; window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+
+  function render() {
+    const v = $('#view');
+    const r = { dashboard: viewDashboard, unit: viewUnit, alarms: viewAlarms, history: viewHistory, workorders: viewWorkOrders, wo: viewWorkOrder, newwo: viewNewWorkOrder, rules: viewRules }[current.view];
+    v.innerHTML = r();
+    bind(v);
+    if (current.view === 'unit') drawCharts();
+    updateNavCount();
+  }
+  function updateNavCount() {
+    const n = alarms.filter(a => !a.ackAt).length, el = $('#nav-count');
+    el.textContent = n; el.hidden = n === 0;
+  }
+
+  // ---------------- Views ----------------
+  function unitCard(u) {
+    const sev = highest(u), s = u.latest, open = alarms.filter(a => a.unitId === u.id && isOpen(a)).length;
+    return `<button class="unit-card ${sev === 'Critical' ? 'critical' : sev === 'Warning' ? 'warning' : ''}" data-go="unit" data-id="${u.id}">
+      <div class="unit-top"><div><div class="unit-tag">${u.tag}</div><div class="unit-name">${esc(u.name)}</div><div class="unit-loc">${esc(vesselOf(u).name)} · ${esc(u.location)}</div></div>
+      <span class="pill">${sev || 'Normal'}</span></div>
+      <div class="metrics">
+        <div><span class="m-label">Supply</span><span class="m-val" data-u="${u.id}" data-f="supply">${fmt(s.supply, 1)} °C</span></div>
+        <div><span class="m-label">Return</span><span class="m-val" data-u="${u.id}" data-f="ret">${fmt(s.ret, 1)} °C</span></div>
+        <div><span class="m-label">RH</span><span class="m-val" data-u="${u.id}" data-f="rh">${fmt(s.rh, 1)} %RH</span></div>
+        <div><span class="m-label">Fan</span><span class="m-val" data-u="${u.id}" data-f="fan">${fmt(s.fan, 1)} %</span></div>
+        <div><span class="m-label">Filter ΔP</span><span class="m-val" data-u="${u.id}" data-f="dp">${fmt(s.dp, 0)} Pa</span></div>
+        <div><span class="m-label">Alarms</span><span class="m-val">${open}</span></div>
+      </div>
+      <div class="unit-foot">Setpoint ${u.setpoint.toFixed(1)} °C · ${u.airflow.toLocaleString('en-US')} m³/h</div></button>`;
+  }
+  function feedItem(a) {
+    const u = units.find(x => x.id === a.unitId);
+    return `<li class="${a.severity}"><div class="row1"><strong>${esc(vesselOf(u).name)} · ${u.tag}</strong><span class="badge ${stateBadge(a)}">${state(a)}</span></div><div>${esc(a.message)}</div><div class="when">${utc(a.raisedAt)}</div></li>`;
+  }
+  function viewDashboard() {
+    const open = alarms.filter(isOpen), unack = alarms.filter(a => !a.ackAt), crit = alarms.filter(a => !a.clearedAt && a.severity === 'Critical');
+    const openWo = workOrders.filter(w => !closed(w));
+    const recent = [...alarms].sort((a, b) => b.raisedAt - a.raisedAt).slice(0, 8);
+    return `<div class="page-head"><div><h1>Fleet dashboard</h1><p class="sub">Live status of all air handling units across the fleet. Values update in real time.</p></div><div class="muted small" id="clock">${utc(now(), false)}</div></div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-label">Units online</div><div class="kpi-value">${units.length}<small> / ${units.length}</small></div><div class="kpi-sub">${vessels.length} vessels</div></div>
+        <div class="kpi"><div class="kpi-label">Open alarms</div><div class="kpi-value">${open.length}</div><div class="kpi-sub">${unack.length} unacknowledged</div></div>
+        <div class="kpi crit"><div class="kpi-label">Critical active</div><div class="kpi-value">${crit.length}</div><div class="kpi-sub">require immediate action</div></div>
+        <div class="kpi"><div class="kpi-label">Open work orders</div><div class="kpi-value">${openWo.length}</div><div class="kpi-sub">${openWo.filter(overdue).length} overdue</div></div>
+      </div>
+      <div class="dash"><section><h2 class="section-title">Air handling units</h2><div class="cards">${units.map(unitCard).join('')}</div></section>
+      <section><h2 class="section-title">Recent alarms</h2><ul class="feed">${recent.map(feedItem).join('')}</ul></section></div>`;
+  }
+
+  function viewUnit() {
+    const u = units.find(x => x.id === current.id), v = vesselOf(u), s = u.latest;
+    const open = alarms.filter(a => a.unitId === u.id && isOpen(a)).sort((a, b) => b.raisedAt - a.raisedAt);
+    const wos = workOrders.filter(w => w.unitId === u.id);
+    return `<div class="crumbs"><button data-go="dashboard">Fleet</button> / ${esc(v.name)} / ${u.tag}</div>
+      <div class="page-head"><div><h1>${u.tag} <span class="muted" style="font-weight:400">– ${esc(u.name)}</span></h1><p class="sub">${esc(v.name)} (IMO <code>${v.imo}</code>) · ${esc(u.location)} · ${u.airflow.toLocaleString('en-US')} m³/h · setpoint ${u.setpoint.toFixed(1)} °C</p></div>
+      <button class="btn primary" data-go="newwo" data-unit="${u.id}">New work order</button></div>
+      <div class="tiles">
+        ${[['Supply air', 'supply', '°C', 1], ['Return air', 'ret', '°C', 1], ['Humidity', 'rh', '%RH', 1], ['Supply fan', 'fan', '%', 1], ['Filter ΔP', 'dp', 'Pa', 0]].map(([l, k, un, d]) =>
+          `<div class="tile"><div class="kpi-label">${l}</div><div class="val" data-u="${u.id}" data-f="${k}">${fmt(s[k], d)} ${un}</div></div>`).join('')}
+      </div>
+      <div class="charts">
+        <div class="panel"><div class="panel-head">Temperatures (°C)<span class="muted small">last 30 min · live</span></div><div class="panel-body"><div class="chart-box"><canvas id="c-temp" aria-label="Supply and return air temperature"></canvas></div></div></div>
+        <div class="panel"><div class="panel-head">Fan speed (%) &amp; filter ΔP (Pa)<span class="muted small">last 30 min · live</span></div><div class="panel-body"><div class="chart-box"><canvas id="c-air" aria-label="Fan speed and filter pressure drop"></canvas></div></div></div>
+      </div>
+      <div class="two-col">
+        <div class="panel"><div class="panel-head">Open alarms (${open.length})${open.some(a => !a.ackAt) ? `<button class="btn sm warn" data-ackall="${u.id}">Acknowledge all</button>` : ''}</div>
+          <ul class="list">${open.length ? open.map(a => `<li><div><span class="badge ${sevBadge(a.severity)}">${a.severity}</span> <span class="badge ${stateBadge(a)}">${state(a)}</span><div>${esc(a.message)}</div><div class="muted small">Raised ${utc(a.raisedAt)} · ${dur(a)}</div></div>
+            <div style="display:flex;gap:.3rem">${!a.ackAt ? `<button class="btn sm warn" data-ack="${a.id}">Ack</button>` : ''}<button class="btn sm" data-go="newwo" data-alarm="${a.id}">Work order</button></div></li>`).join('') : '<li class="muted">No open alarms – unit operating normally.</li>'}</ul></div>
+        <div class="panel"><div class="panel-head">Work orders</div><ul class="list">${wos.length ? wos.map(w => `<li><button class="btn sm" data-go="wo" data-id="${w.id}">${woNo(w)}</button><span style="flex:1;min-width:0">${esc(w.title)}</span><span class="badge ${statusBadge(w.status)}">${w.status}</span></li>`).join('') : '<li class="muted">No work orders for this unit.</li>'}</ul></div>
+      </div>`;
+  }
+  function drawCharts() {
+    const u = units.find(x => x.id === current.id);
+    if (!window.Chart) return;
+    Chart.defaults.color = '#8a9bb8'; Chart.defaults.borderColor = 'rgba(138,155,184,.12)'; Chart.defaults.font.family = 'IBM Plex Sans, system-ui, sans-serif';
+    const pts = u.history.filter(h => h.t > now() - 30 * 60000);
+    const labels = pts.map(p => utc(p.t, false).replace(' UTC', ''));
+    const line = (label, color, data, axis = 'y', dashed = false) => ({ label, data, borderColor: color, backgroundColor: color, yAxisID: axis, borderWidth: dashed ? 1 : 2, pointRadius: 0, tension: .25, borderDash: dashed ? [6, 4] : [] });
+    const limits = rules.filter(r => r.enabled && r.parameter === 'SupplyAirTemperature' && r.condition === 'Above');
+    const base = { animation: false, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { boxWidth: 12 } } } };
+    charts.push(new Chart($('#c-temp'), { type: 'line', data: { labels, datasets: [line('Supply air', '#2dd4bf', pts.map(p => p.supply)), line('Return air', '#38bdf8', pts.map(p => p.ret)),
+      ...limits.map(r => Object.assign(line(`Limit > ${r.threshold} (${r.severity})`, r.severity === 'Critical' ? '#ef4444' : '#f59e0b', pts.map(() => r.threshold), 'y', true), { limit: r.threshold }))] },
+      options: Object.assign({}, base, { scales: { x: { ticks: { maxTicksLimit: 7 } }, y: { title: { display: true, text: '°C' } } } }) }));
+    charts.push(new Chart($('#c-air'), { type: 'line', data: { labels, datasets: [line('Fan speed (%)', '#a78bfa', pts.map(p => p.fan)), line('Filter ΔP (Pa)', '#f59e0b', pts.map(p => p.dp), 'y1')] },
+      options: Object.assign({}, base, { scales: { x: { ticks: { maxTicksLimit: 7 } }, y: { min: 0, max: 100, title: { display: true, text: '%' } }, y1: { position: 'right', min: 0, grid: { drawOnChartArea: false }, title: { display: true, text: 'Pa' } } } }) }));
+  }
+
+  let alarmFilter = { vessel: '', severity: '' };
+  function viewAlarms() {
+    let list = alarms.filter(isOpen);
+    if (alarmFilter.vessel) list = list.filter(a => units.find(u => u.id === a.unitId).vesselId === +alarmFilter.vessel);
+    if (alarmFilter.severity) list = list.filter(a => a.severity === alarmFilter.severity);
+    list.sort((a, b) => (!!a.ackAt - !!b.ackAt) || ((b.severity === 'Critical') - (a.severity === 'Critical')) || (b.raisedAt - a.raisedAt));
+    return `<div class="page-head"><div><h1>Active alarms</h1><p class="sub">Alarms that are still active or not yet acknowledged (ISA-18.2 life cycle). An alarm leaves this list only when it has cleared and been acknowledged.</p></div>
+      ${list.some(a => !a.ackAt) ? '<button class="btn warn" data-ackall="all">Acknowledge all</button>' : ''}</div>
+      <div class="filters"><div class="field"><label for="f-vessel">Vessel</label><select id="f-vessel" data-filter="vessel"><option value="">All vessels</option>${vessels.map(v => `<option value="${v.id}" ${alarmFilter.vessel == v.id ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="f-sev">Severity</label><select id="f-sev" data-filter="severity"><option value="">All severities</option>${['Critical', 'Warning'].map(s => `<option ${alarmFilter.severity === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Severity</th><th>State</th><th>Vessel / unit</th><th>Message</th><th>Raised</th><th>Duration</th><th></th></tr></thead><tbody>
+      ${list.length ? list.map(a => { const u = units.find(x => x.id === a.unitId); return `<tr><td><span class="badge ${sevBadge(a.severity)}">${a.severity}</span></td><td><span class="badge ${stateBadge(a)}">${state(a)}</span></td>
+        <td class="nowrap"><button class="btn sm" data-go="unit" data-id="${u.id}">${u.tag}</button> <span class="muted small">${esc(vesselOf(u).name)}</span></td><td>${esc(a.message)}</td><td class="nowrap small">${utc(a.raisedAt)}</td><td class="nowrap small">${dur(a)}</td>
+        <td class="nowrap">${!a.ackAt ? `<button class="btn sm warn" data-ack="${a.id}">Ack</button> ` : ''}<button class="btn sm" data-go="newwo" data-alarm="${a.id}">Work order</button></td></tr>`; }).join('') : '<tr><td colspan="7" class="empty">No open alarms.</td></tr>'}
+      </tbody></table></div>`;
+  }
+
+  let histQ = '';
+  function viewHistory() {
+    let list = [...alarms].sort((a, b) => b.raisedAt - a.raisedAt);
+    if (histQ) { const q = histQ.toLowerCase(); list = list.filter(a => { const u = units.find(x => x.id === a.unitId); return (a.message + ' ' + u.tag + ' ' + vesselOf(u).name).toLowerCase().includes(q); }); }
+    return `<div class="page-head"><div><h1>Alarm history</h1><p class="sub">Search all alarms. In the real app this table is paged on the server and can be exported to CSV.</p></div></div>
+      <div class="filters"><div class="field" style="flex:1;min-width:200px"><label for="h-q">Search</label><input type="text" id="h-q" value="${esc(histQ)}" placeholder="Message, tag or vessel"></div><span class="muted small">${list.length} records</span></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Raised (UTC)</th><th>Severity</th><th>Vessel / unit</th><th>Message</th><th>Acknowledged</th><th>Cleared</th><th>Duration</th></tr></thead><tbody>
+      ${list.slice(0, 60).map(a => { const u = units.find(x => x.id === a.unitId); return `<tr><td class="nowrap small">${utc(a.raisedAt)}</td><td><span class="badge ${sevBadge(a.severity)}">${a.severity}</span></td><td class="nowrap">${u.tag} <span class="muted small">· ${esc(vesselOf(u).name)}</span></td><td>${esc(a.message)}</td>
+        <td class="small">${a.ackAt ? `${utc(a.ackAt)}<br><span class="muted">${esc(a.ackBy)}</span>` : '<span class="badge b-crit">No</span>'}</td><td class="small nowrap">${a.clearedAt ? utc(a.clearedAt) : 'active'}</td><td class="small nowrap">${dur(a)}</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+  }
+
+  let woShowClosed = false;
+  function viewWorkOrders() {
+    const prio = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+    const list = workOrders.filter(w => woShowClosed || !closed(w)).sort((a, b) => prio[b.priority] - prio[a.priority] || (a.dueDate - b.dueDate));
+    return `<div class="page-head"><div><h1>Work orders</h1><p class="sub">Corrective and preventive maintenance for the fleet's air handling units.</p></div><button class="btn primary" data-go="newwo">New work order</button></div>
+      <div class="filters"><label class="small" style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" id="wo-closed" ${woShowClosed ? 'checked' : ''}> Include completed and cancelled</label></div>
+      <div class="panel table-wrap"><table><thead><tr><th>No.</th><th>Title</th><th>Vessel / unit</th><th>Priority</th><th>Status</th><th>Assigned to</th><th>Due</th></tr></thead><tbody>
+      ${list.map(w => { const u = units.find(x => x.id === w.unitId); return `<tr><td class="mono small"><button class="btn sm" data-go="wo" data-id="${w.id}">${woNo(w)}</button></td><td>${esc(w.title)}</td><td class="nowrap">${u.tag} <span class="muted small">· ${esc(vesselOf(u).name)}</span></td>
+        <td><span class="badge ${prioBadge(w.priority)}">${w.priority}</span></td><td><span class="badge ${statusBadge(w.status)}">${w.status}</span></td><td class="small">${esc(w.assignedTo || '—')}</td>
+        <td class="small nowrap" style="${overdue(w) ? 'color:var(--crit);font-weight:600' : ''}">${date(w.dueDate)}${overdue(w) ? ' · overdue' : ''}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">No work orders.</td></tr>'}
+      </tbody></table></div>`;
+  }
+
+  function viewWorkOrder() {
+    const w = workOrders.find(x => x.id === current.id), u = units.find(x => x.id === w.unitId), a = alarms.find(x => x.id === w.alarmId);
+    const next = TRANSITIONS[w.status];
+    return `<div class="crumbs"><button data-go="workorders">Work orders</button> / ${woNo(w)}</div>
+      <div class="page-head"><div><h1><span class="mono muted">${woNo(w)}</span> ${esc(w.title)}</h1><p class="sub"><span class="badge ${statusBadge(w.status)}">${w.status}</span> <span class="badge ${prioBadge(w.priority)}">${w.priority} priority</span> ${overdue(w) ? '<span class="badge b-crit">Overdue</span>' : ''}</p></div></div>
+      <div class="two-col"><div style="display:grid;gap:1rem;align-content:start">
+        <div class="panel"><div class="panel-head">Description</div><div class="panel-body" style="white-space:pre-line">${esc(w.description || 'No description.')}</div></div>
+        ${w.notes ? `<div class="panel"><div class="panel-head">Resolution</div><div class="panel-body">${esc(w.notes)}</div></div>` : ''}
+        ${next.length ? `<div class="panel"><div class="panel-head">Update status</div><div class="panel-body"><div class="field"><label for="wo-notes">Notes (required to complete)</label><textarea id="wo-notes" rows="3" placeholder="What was done, parts used, findings…"></textarea><div class="err" id="wo-err"></div></div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">${next.map(t => `<button class="btn ${t === 'Completed' ? 'success' : t === 'Cancelled' ? 'danger' : t === 'On hold' ? '' : 'primary'}" data-transition="${t}">${t === 'In progress' && w.status === 'On hold' ? 'Resume' : t}</button>`).join('')}</div></div></div>` : ''}
+      </div><div style="display:grid;gap:1rem;align-content:start">
+        <div class="panel"><div class="panel-head">Details</div><ul class="list small">
+          <li><span class="muted">Unit</span><button class="btn sm" data-go="unit" data-id="${u.id}">${esc(unitLabel(u))}</button></li>
+          <li><span class="muted">Assigned to</span><span>${esc(w.assignedTo || '—')}</span></li><li><span class="muted">Due date</span><span>${date(w.dueDate)}</span></li>
+          <li><span class="muted">Created by</span><span>${esc(w.createdBy)}</span></li>${a ? `<li><span class="muted">Linked alarm</span><span><span class="badge ${sevBadge(a.severity)}">${a.severity}</span> ${esc(a.message)}</span></li>` : ''}</ul></div>
+        <div class="panel"><div class="panel-head">Timeline</div><div class="panel-body"><ul class="timeline"><li><strong>Created</strong><br><span class="muted">${utc(w.createdAt)}</span></li>
+          ${w.startedAt ? `<li><strong>Work started</strong><br><span class="muted">${utc(w.startedAt)}</span></li>` : ''}${w.closedAt ? `<li><strong>${w.status}</strong><br><span class="muted">${utc(w.closedAt)}</span></li>` : ''}</ul></div></div>
+      </div></div>`;
+  }
+
+  let draft = null;
+  function viewNewWorkOrder() {
+    const d = draft;
+    return `<div class="crumbs"><button data-go="workorders">Work orders</button> / New</div>
+      <div class="page-head"><div><h1>New work order</h1></div></div>
+      <div class="panel" style="max-width:860px"><div class="panel-body">
+      ${d.alarmId ? `<div class="note">Linked to alarm: ${esc(alarms.find(a => a.id === d.alarmId).message)}</div>` : ''}
+      <form id="wo-form" class="form-grid" novalidate>
+        <div class="field full"><label for="n-title">Title</label><input type="text" id="n-title" value="${esc(d.title)}" maxlength="150"><div class="err" id="e-title"></div></div>
+        <div class="field"><label for="n-unit">Air handling unit</label><select id="n-unit" ${d.alarmId ? 'disabled' : ''}><option value="0">— select unit —</option>${units.map(u => `<option value="${u.id}" ${u.id === d.unitId ? 'selected' : ''}>${esc(unitLabel(u))}</option>`).join('')}</select><div class="err" id="e-unit"></div></div>
+        <div class="field"><label for="n-prio">Priority</label><select id="n-prio">${['Low', 'Medium', 'High', 'Urgent'].map(p => `<option ${p === d.priority ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+        <div class="field"><label for="n-due">Due date</label><input type="date" id="n-due" value="${d.due}"></div>
+        <div class="field"><label for="n-assign">Assigned to</label><select id="n-assign"><option value="">— unassigned —</option>${['engineer@hvacguard.local', 'tech@hvacguard.local', 'admin@hvacguard.local'].map(e => `<option>${e}</option>`).join('')}</select></div>
+        <div class="field full"><label for="n-desc">Description</label><textarea id="n-desc" rows="4">${esc(d.description)}</textarea></div>
+        <div class="full" style="display:flex;gap:.5rem"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-go="workorders">Cancel</button></div>
+      </form></div></div>`;
+  }
+
+  function viewRules() {
+    return `<div class="page-head"><div><h1>Alarm rules</h1><p class="sub">Thresholds evaluated against every incoming reading. The deadband keeps an alarm from chattering around its limit: above 22 °C with deadband 0.5 raises at 22.1 °C and clears at 21.5 °C.</p></div></div>
+      <div class="panel table-wrap"><table><thead><tr><th>Rule</th><th>Parameter</th><th>Limit</th><th>Deadband</th><th>Severity</th><th>Enabled</th></tr></thead><tbody>
+      ${rules.map(r => `<tr style="${r.enabled ? '' : 'opacity:.5'}"><td><strong>${esc(r.name)}</strong></td><td>${PARAMS[r.parameter].label}</td><td><code>${describe(r)}</code></td><td>${r.deadband} ${PARAMS[r.parameter].unit}</td>
+        <td><span class="badge ${sevBadge(r.severity)}">${r.severity}</span></td><td><button class="btn sm ${r.enabled ? 'success' : ''}" data-toggle="${r.id}" aria-pressed="${r.enabled}">${r.enabled ? 'On' : 'Off'}</button></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  // ---------------- Interactions ----------------
+  function bind(root) {
+    root.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => {
+      const view = el.dataset.go;
+      if (view === 'newwo') {
+        const a = el.dataset.alarm ? alarms.find(x => x.id === +el.dataset.alarm) : null;
+        const due = new Date(Date.now() + (a && a.severity === 'Critical' ? 1 : 3) * 864e5);
+        draft = a ? { alarmId: a.id, unitId: a.unitId, title: `Investigate: ${a.message}`.slice(0, 150), priority: a.severity === 'Critical' ? 'Urgent' : 'High', due: date(due), description: `Raised ${utc(a.raisedAt)} on ${vesselOf(units.find(u => u.id === a.unitId)).name} / ${units.find(u => u.id === a.unitId).tag}.` }
+                  : { alarmId: null, unitId: el.dataset.unit ? +el.dataset.unit : 0, title: '', priority: 'Medium', due: '', description: '' };
+      }
+      go(view, el.dataset.id ? +el.dataset.id : null);
+    }));
+    root.querySelectorAll('[data-ack]').forEach(el => el.addEventListener('click', () => { const a = alarms.find(x => x.id === +el.dataset.ack); a.ackAt = now(); a.ackBy = user; toast(`Alarm on ${units.find(u => u.id === a.unitId).tag} acknowledged.`); render(); }));
+    root.querySelectorAll('[data-ackall]').forEach(el => el.addEventListener('click', () => {
+      const scope = el.dataset.ackall; let n = 0;
+      alarms.filter(a => !a.ackAt && (scope === 'all' || a.unitId === +scope)).forEach(a => { a.ackAt = now(); a.ackBy = user; n++; });
+      toast(`${n} alarm(s) acknowledged.`); render();
+    }));
+    root.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('change', () => { alarmFilter[el.dataset.filter] = el.value; render(); }));
+    const hq = $('#h-q', root); if (hq) hq.addEventListener('input', () => { histQ = hq.value; const pos = hq.selectionStart; render(); const n = $('#h-q'); n.focus(); n.setSelectionRange(pos, pos); });
+    const wc = $('#wo-closed', root); if (wc) wc.addEventListener('change', () => { woShowClosed = wc.checked; render(); });
+    root.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => { const r = rules.find(x => x.id === +el.dataset.toggle); r.enabled = !r.enabled; toast(r.enabled ? 'Rule enabled.' : 'Rule disabled – its active alarms clear on the next reading.'); render(); }));
+    root.querySelectorAll('[data-transition]').forEach(el => el.addEventListener('click', () => {
+      const w = workOrders.find(x => x.id === current.id), t = el.dataset.transition, notes = $('#wo-notes').value.trim();
+      if (t === 'Completed' && !notes) { $('#wo-err').textContent = 'Resolution notes are required to complete a work order.'; $('#wo-notes').focus(); return; }
+      if (t === 'In progress' && !w.startedAt) w.startedAt = now();
+      if (t === 'Completed' || t === 'Cancelled') { w.closedAt = now(); w.notes = notes || null; }
+      w.status = t; toast(`${woNo(w)} moved to '${t}'.`); render();
+    }));
+    const form = $('#wo-form', root);
+    if (form) form.addEventListener('submit', e => {
+      e.preventDefault();
+      const title = $('#n-title').value.trim(), unitId = draft.alarmId ? draft.unitId : +$('#n-unit').value;
+      $('#e-title').textContent = title ? '' : 'The Title field is required.';
+      $('#e-unit').textContent = unitId ? '' : 'Please select an air handling unit.';
+      if (!title || !unitId) return;
+      const due = $('#n-due').value;
+      const w = wo({ title, unitId, alarmId: draft.alarmId, priority: $('#n-prio').value, assignedTo: $('#n-assign').value || null, dueDate: due ? new Date(due + 'T00:00:00Z') : null, description: $('#n-desc').value.trim() || null });
+      toast(`Work order ${woNo(w)} was created.`); go('wo', w.id);
+    });
+  }
+
+  function toast(text, severity = 'Info') {
+    const el = document.createElement('div'); el.className = `toast ${severity}`; el.innerHTML = text;
+    $('#toasts').appendChild(el); setTimeout(() => el.remove(), 6000);
+    while ($('#toasts').children.length > 4) $('#toasts').firstElementChild.remove();
+  }
+
+  // ---------------- Live loop (TelemetrySimulator) ----------------
+  setInterval(() => {
+    const at = now(); let changed = false;
+    units.forEach(u => {
+      const { raised, cleared } = ingest(u, u.sim(), at);
+      raised.forEach(a => toast(`<strong>${esc(vesselOf(u).name)} · ${u.tag}</strong><br>${esc(a.message)}`, a.severity));
+      if (raised.length || cleared.length) changed = true;
+      document.querySelectorAll(`[data-u="${u.id}"]`).forEach(el => {
+        const k = el.dataset.f, d = k === 'dp' ? 0 : 1, un = { supply: '°C', ret: '°C', rh: '%RH', fan: '%', dp: 'Pa' }[k];
+        el.textContent = `${fmt(u.latest[k], d)} ${un}`; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+      });
+    });
+    const c = $('#clock'); if (c) c.textContent = utc(at, false);
+    if (current.view === 'unit' && charts.length === 2) {
+      const u = units.find(x => x.id === current.id), l = utc(at, false).replace(' UTC', '');
+      const [t, a] = charts;
+      t.data.labels.push(l); t.data.datasets[0].data.push(u.latest.supply); t.data.datasets[1].data.push(u.latest.ret); t.data.datasets.slice(2).forEach(ds => ds.data.push(ds.limit));
+      a.data.labels.push(l); a.data.datasets[0].data.push(u.latest.fan); a.data.datasets[1].data.push(u.latest.dp);
+      [t, a].forEach(ch => { while (ch.data.labels.length > 600) { ch.data.labels.shift(); ch.data.datasets.forEach(ds => ds.data.shift()); } ch.update('none'); });
+    }
+    // Re-render list views when alarms change, but never while the user is typing in a form.
+    if (changed && !['newwo', 'wo', 'history', 'unit'].includes(current.view)) render();
+    else updateNavCount();
+  }, 3000);
+
+  go('dashboard');
+})();
+</script>
+
+</body>
+</html>
