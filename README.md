@@ -1,6 +1,5 @@
 # HvacGuard – Marine HVAC Monitoring & Maintenance Platform
 
-[![CI](https://github.com/AliCavuss/HvacGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/AliCavuss/HvacGuard/actions/workflows/ci.yml)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-5C2D91)
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-EF%20Core-CC2927)
@@ -10,10 +9,10 @@
 fleet in real time, managing alarms according to the **ISA-18.2** alarm life cycle and tracking maintenance with
 **work orders**. It is based on my day-to-day work building SCADA/HMI screens for marine HVAC systems.
 
-### [▶ Open the live demo](https://alicavuss.github.io/HvacGuard/) &nbsp;·&nbsp; [Run the full app in Codespaces](https://codespaces.new/AliCavuss/HvacGuard) &nbsp;·&nbsp; [Demo accounts](#demo-accounts) &nbsp;·&nbsp; [5-minute code tour](#5-minute-code-tour)
+### [▶ Open the live demo](https://alicavuss.github.io/HvacGuard/) &nbsp;·&nbsp; [Demo accounts](#demo-accounts) &nbsp;·&nbsp; [5-minute code tour](#5-minute-code-tour)
 
 > The **live demo** opens instantly in any browser: it reproduces the app's screens and alarm logic with simulated data.
-> The **full application** (ASP.NET Core + SQL Server) is this repository – one click in GitHub Codespaces, `docker compose up`, or `dotnet run`.
+> The **full application** (ASP.NET Core + SQL Server) is this repository – `docker compose up` or `dotnet run`.
 
 | Fleet dashboard – live values via SignalR | Unit details – trends with alarm limits |
 |---|---|
@@ -23,9 +22,9 @@ fleet in real time, managing alarms according to the **ISA-18.2** alarm life cyc
 
 ## At a glance
 
-- **Stack:** C# · .NET 10 · ASP.NET Core MVC · Entity Framework Core 10 · SQL Server · ASP.NET Core Identity · SignalR · Chart.js · xUnit · Docker · GitHub Actions
+- **Stack:** C# · .NET 10 · ASP.NET Core MVC · Entity Framework Core 10 · SQL Server · ASP.NET Core Identity · SignalR · Chart.js · xUnit · Docker
 - **Demonstrates:** layered architecture, rich domain model with business rules, real-time push to the browser, REST API secured with an API key,
-  role-based authorization, background services, efficient EF Core queries, unit + integration tests, CI pipeline, containerisation.
+  role-based authorization, background services, efficient EF Core queries, unit + integration tests, containerisation.
 - **Domain knowledge:** ISA-18.2 alarm life cycle, deadband/hysteresis, IMO ship numbers (check digit), fan affinity law in the simulator.
 
 ## 5-minute code tour
@@ -56,7 +55,7 @@ fleet in real time, managing alarms according to the **ISA-18.2** alarm life cyc
 | **Telemetry REST API** | `POST /api/telemetry` for PLC / SCADA / IoT gateways, protected by an **API key** header; `GET /api/units/{id}/readings`. OpenAPI document in development. |
 | **Security** | ASP.NET Core **Identity**, cookie auth, global "authenticated by default" filter, role-based **policies** (Admin / Engineer / Viewer), anti-forgery tokens, lockout, constant-time API-key comparison. |
 | **Simulator** | A `BackgroundService` with a small physical model of an AHU (first-order lag, sensor noise, filter clogging with ΔP ∝ airflow², random cooling / fan / humidity faults) feeds the same ingestion pipeline as the API, so the demo is alive out of the box. |
-| **Ops** | Health check (`/health`), Docker + docker-compose (SQL Server), GitHub Actions CI, automatic data retention for telemetry. |
+| **Ops** | Health check (`/health`), Docker + docker-compose (SQL Server), automatic data retention for telemetry. |
 
 ## Tech stack
 
@@ -64,7 +63,7 @@ fleet in real time, managing alarms according to the **ISA-18.2** alarm life cyc
 - **Database:** Microsoft SQL Server (LocalDB for development, SQL Server 2022 in Docker)
 - **Frontend:** Razor views + Tag Helpers, Bootstrap 5.3 (custom dark "control room" theme), Chart.js, vanilla JavaScript
 - **Testing:** xUnit, EF Core InMemory provider
-- **DevOps:** Docker, docker-compose, GitHub Actions
+- **DevOps:** Docker, docker-compose
 
 ## Architecture
 
@@ -138,13 +137,6 @@ tests/
   servers with Turkish or German locale.
 
 ## Getting started
-
-### Option 0 – In the browser with GitHub Codespaces (nothing to install)
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/AliCavuss/HvacGuard)
-
-Click the badge (or **Code → Codespaces → Create codespace on main**). The dev container installs the .NET 10 SDK,
-starts SQL Server and runs the app; port **5180** opens in a new browser tab. First start takes a few minutes.
 
 ### Option 1 – Visual Studio / `dotnet run` (Windows, SQL Server LocalDB)
 
