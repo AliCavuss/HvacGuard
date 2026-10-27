@@ -1,0 +1,15 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+*.swp
+TestResults/
+publish/
+appsettings.*.local.json
+*.db
+*.db-shm
+*.db-wal
