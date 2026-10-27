@@ -1,0 +1,82 @@
+@model UnitFormModel
+@{
+    var isEdit = Model.Id.HasValue;
+    ViewData["Title"] = isEdit ? $"Edit {Model.Tag}" : "Add air handling unit";
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Vessels" asp-action="Index">Fleet</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Vessels" asp-action="Details" asp-route-id="@Model.VesselId">@Model.VesselName</a></li>
+        <li class="breadcrumb-item active">@(isEdit ? Model.Tag : "New unit")</li>
+    </ol>
+</nav>
+
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><p>Vessel: @Model.VesselName</p></div></div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post">
+            <input type="hidden" asp-for="VesselId" />
+            <input type="hidden" asp-for="VesselName" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Tag" class="form-label"></label>
+                    <input asp-for="Tag" class="form-control font-monospace text-uppercase" placeholder="AHU-05" />
+                    <span asp-validation-for="Tag" class="text-danger small"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Crew mess" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Location" class="form-label"></label>
+                    <input asp-for="Location" class="form-control" placeholder="e.g. Deck 4 – Aft" />
+                    <span asp-validation-for="Location" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Manufacturer" class="form-label"></label>
+                    <input asp-for="Manufacturer" class="form-control" />
+                    <span asp-validation-for="Manufacturer" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="RatedAirflow" class="form-label"></label>
+                    <input asp-for="RatedAirflow" class="form-control" />
+                    <span asp-validation-for="RatedAirflow" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SupplyTempSetpoint" class="form-label"></label>
+                    <input asp-for="SupplyTempSetpoint" class="form-control" step="0.5" />
+                    <span asp-validation-for="SupplyTempSetpoint" class="text-danger small"></span>
+                </div>
+                <div class="col-md-2">
+                    <label asp-for="CommissionedOn" class="form-label"></label>
+                    <input asp-for="CommissionedOn" class="form-control" />
+                    <span asp-validation-for="CommissionedOn" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" role="switch" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                @if (isEdit)
+                {
+                    <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-secondary" asp-controller="Vessels" asp-action="Details" asp-route-id="@Model.VesselId">Cancel</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,118 @@
+@model WorkOrder
+@{
+    var w = Model;
+    var now = DateTime.UtcNow;
+    ViewData["Title"] = $"{w.Number} · {w.Title}";
+    var transitions = w.AllowedTransitions();
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Work orders</a></li>
+        <li class="breadcrumb-item active">@w.Number</li>
+    </ol>
+</nav>
+
+<div class="page-header">
+    <div>
+        <h1><span class="font-monospace text-secondary">@w.Number</span> @w.Title</h1>
+        <p>
+            <span class="badge @Ui.StatusBadge(w.Status)">@w.Status.DisplayName()</span>
+            <span class="badge @Ui.PriorityBadge(w.Priority)">@w.Priority priority</span>
+            @if (w.IsOverdue(now))
+            {
+                <span class="badge text-bg-danger"><i class="bi bi-alarm"></i> Overdue</span>
+            }
+        </p>
+    </div>
+    @if (User.CanOperate() && !w.IsClosed)
+    {
+        <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@w.Id"><i class="bi bi-pencil"></i> Edit</a>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">Description</div>
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-line">@(w.Description ?? "No description.")</p>
+            </div>
+        </div>
+
+        @if (w.ResolutionNotes is not null)
+        {
+            <div class="card mb-4 border-success">
+                <div class="card-header">Resolution</div>
+                <div class="card-body"><p class="mb-0" style="white-space: pre-line">@w.ResolutionNotes</p></div>
+            </div>
+        }
+
+        @if (User.CanOperate() && transitions.Count > 0)
+        {
+            <div class="card">
+                <div class="card-header">Update status</div>
+                <div class="card-body">
+                    <form asp-action="ChangeStatus" asp-route-id="@w.Id" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="notes">Notes <span class="text-secondary small">(required to complete, optional to cancel)</span></label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" maxlength="2000" placeholder="What was done, parts used, findings…"></textarea>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var t in transitions)
+                            {
+                                var css = t switch
+                                {
+                                    WorkOrderStatus.Completed => "btn-success",
+                                    WorkOrderStatus.Cancelled => "btn-outline-danger",
+                                    WorkOrderStatus.OnHold => "btn-outline-warning",
+                                    _ => "btn-primary"
+                                };
+                                <button type="submit" name="status" value="@t" class="btn @css">
+                                    @(t == WorkOrderStatus.InProgress && w.Status == WorkOrderStatus.OnHold ? "Resume" : t.DisplayName())
+                                </button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">Details</div>
+            <dl class="card-body row mb-0 small">
+                <dt class="col-5">Vessel</dt>
+                <dd class="col-7"><a asp-controller="Vessels" asp-action="Details" asp-route-id="@w.Unit.VesselId">@w.Unit.Vessel.Name</a></dd>
+                <dt class="col-5">Unit</dt>
+                <dd class="col-7"><a asp-controller="Units" asp-action="Details" asp-route-id="@w.UnitId">@w.Unit.Tag – @w.Unit.Name</a></dd>
+                <dt class="col-5">Assigned to</dt>
+                <dd class="col-7">@(w.AssignedTo ?? "—")</dd>
+                <dt class="col-5">Due date</dt>
+                <dd class="col-7">@Ui.Date(w.DueDate)</dd>
+                <dt class="col-5">Created by</dt>
+                <dd class="col-7">@w.CreatedBy</dd>
+                @if (w.Alarm is not null)
+                {
+                    <dt class="col-5">Linked alarm</dt>
+                    <dd class="col-7"><span class="badge @Ui.SeverityBadge(w.Alarm.Severity)">@w.Alarm.Severity</span> @w.Alarm.Message</dd>
+                }
+            </dl>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Timeline</div>
+            <ul class="timeline card-body mb-0">
+                <li><strong>Created</strong><span>@Ui.Utc(w.CreatedAt)</span></li>
+                @if (w.StartedAt.HasValue)
+                {
+                    <li><strong>Work started</strong><span>@Ui.Utc(w.StartedAt)</span></li>
+                }
+                @if (w.ClosedAt.HasValue)
+                {
+                    <li><strong>@w.Status.DisplayName()</strong><span>@Ui.Utc(w.ClosedAt)</span></li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

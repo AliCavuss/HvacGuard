@@ -1,0 +1,43 @@
+### HvacGuard telemetry API – open in Visual Studio / Rider / VS Code (REST Client)
+@baseUrl = https://localhost:7180
+@apiKey = change-me-dev-api-key
+
+### Push a normal reading for unit 1
+POST {{baseUrl}}/api/telemetry
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "unitId": 1,
+  "supplyAirTemperature": 18.2,
+  "returnAirTemperature": 23.9,
+  "relativeHumidity": 51.5,
+  "fanSpeed": 78,
+  "filterPressureDrop": 165
+}
+
+### Push a reading that violates the "supply air temperature high-high" rule
+POST {{baseUrl}}/api/telemetry
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "unitId": 1,
+  "supplyAirTemperature": 26.4,
+  "returnAirTemperature": 31.2,
+  "relativeHumidity": 63,
+  "fanSpeed": 77,
+  "filterPressureDrop": 170
+}
+
+### Missing API key → 401
+POST {{baseUrl}}/api/telemetry
+Content-Type: application/json
+
+{ "unitId": 1, "supplyAirTemperature": 18, "returnAirTemperature": 24, "relativeHumidity": 50, "fanSpeed": 78, "filterPressureDrop": 150 }
+
+### Health check
+GET {{baseUrl}}/health
+
+### OpenAPI document (Development only)
+GET {{baseUrl}}/openapi/v1.json

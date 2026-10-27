@@ -1,0 +1,98 @@
+@model AlarmHistoryViewModel
+@{
+    ViewData["Title"] = "Alarm history";
+    var q = Model.Query;
+    var now = DateTime.UtcNow;
+}
+<div class="page-header">
+    <div>
+        <h1>Alarm history</h1>
+        <p>Search all alarms and export them to CSV for reporting.</p>
+    </div>
+    <a class="btn btn-outline-success" href="@Context.Request.WithQuery("format", "csv")"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+</div>
+
+<form method="get" class="filter-bar row g-2 align-items-end mb-3">
+    <div class="col-md-3">
+        <label class="form-label small" for="Search">Search</label>
+        <input class="form-control form-control-sm" id="Search" name="Search" value="@q.Search" placeholder="Message, tag or vessel" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="VesselId">Vessel</label>
+        <select class="form-select form-select-sm" id="VesselId" name="VesselId" asp-items="Model.VesselOptions">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="Severity">Severity</label>
+        <select class="form-select form-select-sm" id="Severity" name="Severity" asp-items="Ui.EnumOptions<AlarmSeverity>(q.Severity)">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="Parameter">Parameter</label>
+        <select class="form-select form-select-sm" id="Parameter" name="Parameter" asp-items="Ui.EnumOptions<SensorParameter>(q.Parameter)">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <label class="form-label small" for="From">From</label>
+        <input type="date" class="form-control form-control-sm" id="From" name="From" value="@(q.From?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-1">
+        <label class="form-label small" for="To">To</label>
+        <input type="date" class="form-control form-control-sm" id="To" name="To" value="@(q.To?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-sm btn-primary w-100"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Raised (UTC)</th>
+                <th>Severity</th>
+                <th>Vessel / unit</th>
+                <th>Message</th>
+                <th>Acknowledged</th>
+                <th>Cleared</th>
+                <th>Duration</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Result.Items.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4">No alarms match the filter.</td></tr>
+            }
+            @foreach (var a in Model.Result.Items)
+            {
+                <tr>
+                    <td class="text-nowrap small">@Ui.Utc(a.RaisedAt, "yyyy-MM-dd HH:mm:ss")</td>
+                    <td><span class="badge @Ui.SeverityBadge(a.Severity)">@a.Severity</span></td>
+                    <td class="text-nowrap">
+                        <a asp-controller="Units" asp-action="Details" asp-route-id="@a.UnitId">@a.Unit.Tag</a>
+                        <span class="small text-secondary">· @a.Unit.Vessel.Name</span>
+                    </td>
+                    <td>@a.Message</td>
+                    <td class="small">
+                        @if (a.IsAcknowledged)
+                        {
+                            <span>@Ui.Utc(a.AcknowledgedAt, "MM-dd HH:mm")</span><br /><span class="text-secondary">@a.AcknowledgedBy</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-danger">No</span>
+                        }
+                    </td>
+                    <td class="small text-nowrap">@(a.ClearedAt.HasValue ? Ui.Utc(a.ClearedAt, "MM-dd HH:mm") : "active")</td>
+                    <td class="small text-nowrap">@Ui.Duration(a.Duration(now))</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<partial name="_Pager" model="Model.Result" />

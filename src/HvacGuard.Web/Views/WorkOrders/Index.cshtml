@@ -1,0 +1,100 @@
+@model WorkOrderListViewModel
+@{
+    ViewData["Title"] = "Work orders";
+    var q = Model.Query;
+    var now = DateTime.UtcNow;
+}
+<div class="page-header">
+    <div>
+        <h1>Work orders</h1>
+        <p>Corrective and preventive maintenance for the fleet's air handling units.</p>
+    </div>
+    @if (User.CanOperate())
+    {
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> New work order</a>
+    }
+</div>
+
+<form method="get" class="filter-bar row g-2 align-items-end mb-3">
+    <div class="col-md-3">
+        <label class="form-label small" for="Search">Search</label>
+        <input class="form-control form-control-sm" id="Search" name="Search" value="@q.Search" placeholder="Title, description or tag" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="Status">Status</label>
+        <select class="form-select form-select-sm" id="Status" name="Status" asp-items="Ui.EnumOptions<WorkOrderStatus>(q.Status)">
+            <option value="">Any open</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="Priority">Priority</label>
+        <select class="form-select form-select-sm" id="Priority" name="Priority" asp-items="Ui.EnumOptions<WorkOrderPriority>(q.Priority)">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="VesselId">Vessel</label>
+        <select class="form-select form-select-sm" id="VesselId" name="VesselId" asp-items="Model.VesselOptions">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label small" for="AssignedTo">Assignee</label>
+        <select class="form-select form-select-sm" id="AssignedTo" name="AssignedTo" asp-items="Model.AssigneeOptions">
+            <option value="">Anyone</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <div class="form-check small mb-1">
+            <input class="form-check-input" type="checkbox" id="OpenOnly" name="OpenOnly" value="false" checked="@(!q.OpenOnly)" />
+            <label class="form-check-label" for="OpenOnly">Incl. closed</label>
+        </div>
+        <button class="btn btn-sm btn-primary w-100"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+            <tr>
+                <th>No.</th>
+                <th>Title</th>
+                <th>Vessel / unit</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned to</th>
+                <th>Due</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Result.Items.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4">No work orders match the filter.</td></tr>
+            }
+            @foreach (var w in Model.Result.Items)
+            {
+                <tr>
+                    <td class="font-monospace small"><a asp-action="Details" asp-route-id="@w.Id">@w.Number</a></td>
+                    <td><a asp-action="Details" asp-route-id="@w.Id">@w.Title</a></td>
+                    <td class="text-nowrap">
+                        <a asp-controller="Units" asp-action="Details" asp-route-id="@w.UnitId">@w.Unit.Tag</a>
+                        <span class="small text-secondary">· @w.Unit.Vessel.Name</span>
+                    </td>
+                    <td><span class="badge @Ui.PriorityBadge(w.Priority)">@w.Priority</span></td>
+                    <td><span class="badge @Ui.StatusBadge(w.Status)">@w.Status.DisplayName()</span></td>
+                    <td class="small">@(w.AssignedTo ?? "—")</td>
+                    <td class="small text-nowrap @(w.IsOverdue(now) ? "text-danger fw-semibold" : "")">
+                        @Ui.Date(w.DueDate)
+                        @if (w.IsOverdue(now))
+                        {
+                            <i class="bi bi-alarm" title="Overdue"></i>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<partial name="_Pager" model="Model.Result" />

@@ -1,0 +1,49 @@
+@model IReadOnlyList<AlarmRule>
+@{
+    ViewData["Title"] = "Alarm rules";
+}
+<div class="page-header">
+    <div>
+        <h1>Alarm rules</h1>
+        <p>Thresholds evaluated against every incoming reading. The deadband prevents alarm chattering around the limit.</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> New rule</a>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Rule</th>
+                <th>Parameter</th>
+                <th>Limit</th>
+                <th>Deadband</th>
+                <th>Severity</th>
+                <th>Enabled</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                <tr class="@(r.IsEnabled ? "" : "opacity-50")">
+                    <td class="fw-semibold">@r.Name</td>
+                    <td>@r.Parameter.DisplayName()</td>
+                    <td><code>@r.Describe()</code></td>
+                    <td>@r.Deadband.ToString("0.##") @r.Parameter.Unit()</td>
+                    <td><span class="badge @Ui.SeverityBadge(r.Severity)">@r.Severity</span></td>
+                    <td>
+                        <form asp-action="Toggle" asp-route-id="@r.Id" method="post">
+                            <button class="btn btn-sm @(r.IsEnabled ? "btn-success" : "btn-outline-secondary")">
+                                @(r.IsEnabled ? "On" : "Off")
+                            </button>
+                        </form>
+                    </td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@r.Id"><i class="bi bi-pencil"></i></a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

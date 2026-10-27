@@ -1,0 +1,88 @@
+@model DashboardSummary
+@{
+    ViewData["Title"] = "Fleet dashboard";
+    var k = Model.Kpis;
+    var now = DateTime.UtcNow;
+}
+<div class="page-header">
+    <div>
+        <h1>Fleet dashboard</h1>
+        <p>Live status of all air handling units across the fleet. Values update in real time.</p>
+    </div>
+    <div class="text-secondary small text-end">
+        <i class="bi bi-clock"></i> <span id="utc-clock">@now.ToString("HH:mm:ss")</span> UTC
+    </div>
+</div>
+
+<div class="row row-cols-2 row-cols-md-4 g-3 mb-4" id="kpis">
+    <div class="col">
+        <div class="kpi">
+            <div class="kpi-label"><i class="bi bi-hdd-network"></i> Units online</div>
+            <div class="kpi-value"><span data-kpi="onlineUnitCount">@k.OnlineUnitCount</span><small> / <span data-kpi="unitCount">@k.UnitCount</span></small></div>
+            <div class="kpi-sub">@k.VesselCount vessels</div>
+        </div>
+    </div>
+    <div class="col">
+        <a class="kpi kpi-link" asp-controller="Alarms" asp-action="Index">
+            <div class="kpi-label"><i class="bi bi-bell"></i> Open alarms</div>
+            <div class="kpi-value"><span data-kpi="openAlarmCount">@k.OpenAlarmCount</span></div>
+            <div class="kpi-sub"><span data-kpi="unacknowledgedAlarmCount">@k.UnacknowledgedAlarmCount</span> unacknowledged</div>
+        </a>
+    </div>
+    <div class="col">
+        <a class="kpi kpi-link kpi-critical" asp-controller="Alarms" asp-action="Index" asp-route-severity="Critical">
+            <div class="kpi-label"><i class="bi bi-exclamation-octagon"></i> Critical active</div>
+            <div class="kpi-value"><span data-kpi="criticalAlarmCount">@k.CriticalAlarmCount</span></div>
+            <div class="kpi-sub">require immediate action</div>
+        </a>
+    </div>
+    <div class="col">
+        <a class="kpi kpi-link" asp-controller="WorkOrders" asp-action="Index">
+            <div class="kpi-label"><i class="bi bi-wrench-adjustable"></i> Open work orders</div>
+            <div class="kpi-value"><span data-kpi="openWorkOrderCount">@k.OpenWorkOrderCount</span></div>
+            <div class="kpi-sub"><span data-kpi="overdueWorkOrderCount">@k.OverdueWorkOrderCount</span> overdue</div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-9">
+        <h2 class="section-title">Air handling units</h2>
+        @if (Model.Units.Count == 0)
+        {
+            <div class="empty-state">No units yet. <a asp-controller="Vessels" asp-action="Index">Add a vessel</a> to get started.</div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xxl-3 g-3">
+                @foreach (var unit in Model.Units)
+                {
+                    <partial name="_UnitCard" model="unit" />
+                }
+            </div>
+        }
+    </div>
+    <div class="col-xl-3">
+        <h2 class="section-title d-flex justify-content-between">
+            Recent alarms
+            <a class="small fw-normal" asp-controller="Alarms" asp-action="History">History →</a>
+        </h2>
+        <ul class="alarm-feed" id="alarm-feed">
+            @foreach (var a in Model.RecentAlarms)
+            {
+                <li class="severity-@a.Severity.ToString().ToLowerInvariant()" data-alarm-id="@a.Id">
+                    <div class="d-flex justify-content-between">
+                        <strong>@a.Unit.Vessel.Name · @a.Unit.Tag</strong>
+                        <span class="badge @Ui.AlarmStateBadge(a.State)" data-field="alarm-state">@a.State.DisplayName()</span>
+                    </div>
+                    <div class="small">@a.Message</div>
+                    <div class="small text-secondary">@Ui.Utc(a.RaisedAt, "MM-dd HH:mm:ss")</div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

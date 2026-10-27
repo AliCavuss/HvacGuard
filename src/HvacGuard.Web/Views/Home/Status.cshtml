@@ -1,0 +1,16 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = Model.StatusCode.ToString();
+    var (icon, title, text) = Model.StatusCode switch
+    {
+        404 => ("bi-compass", "Page not found", "The page or record you are looking for does not exist."),
+        403 => ("bi-shield-lock", "Access denied", "You do not have permission to view this page."),
+        _ => ("bi-exclamation-diamond", "Request failed", "The request could not be completed.")
+    };
+}
+<div class="text-center py-5">
+    <i class="bi @icon display-4 text-secondary"></i>
+    <h1 class="h3 mt-3">@Model.StatusCode · @title</h1>
+    <p class="text-secondary">@text</p>
+    <a class="btn btn-primary" href="/">Back to dashboard</a>
+</div>

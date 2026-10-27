@@ -1,0 +1,160 @@
+@model UnitDetailsViewModel
+@{
+    var u = Model.Unit;
+    var s = Model.Status;
+    var latest = s.Latest;
+    var now = DateTime.UtcNow;
+    ViewData["Title"] = $"{u.Tag} · {u.Vessel.Name}";
+    var thresholds = Model.Rules
+        .Select(r => new { parameter = r.Parameter.ToString(), condition = r.Condition.ToString(), threshold = r.Threshold, severity = r.Severity.ToString() })
+        .ToList();
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Vessels" asp-action="Index">Fleet</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Vessels" asp-action="Details" asp-route-id="@u.VesselId">@u.Vessel.Name</a></li>
+        <li class="breadcrumb-item active">@u.Tag</li>
+    </ol>
+</nav>
+
+<div class="page-header">
+    <div>
+        <h1>@u.Tag <span class="text-secondary fw-normal">– @u.Name</span></h1>
+        <p>
+            @u.Location · @(u.Manufacturer ?? "Unknown manufacturer") · @u.RatedAirflow.ToString("N0") m³/h ·
+            setpoint @u.SupplyTempSetpoint.ToString("0.0") °C
+            @if (!u.IsActive)
+            {
+                <span class="badge text-bg-secondary ms-1">Inactive</span>
+            }
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (User.CanOperate())
+        {
+            <a class="btn btn-outline-primary" asp-controller="WorkOrders" asp-action="Create" asp-route-unitId="@u.Id"><i class="bi bi-wrench-adjustable"></i> New work order</a>
+        }
+        @if (User.CanManageAssets())
+        {
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@u.Id"><i class="bi bi-pencil"></i> Edit</a>
+            <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@u.Id"><i class="bi bi-trash"></i></a>
+        }
+    </div>
+</div>
+
+<div id="unit-live" data-unit-id="@u.Id" data-thresholds="@System.Text.Json.JsonSerializer.Serialize(thresholds)">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+        <div class="col"><div class="gauge-tile"><div class="kpi-label">Supply air</div><div class="gauge-value" data-field="supplyAirTemperature">@Ui.Value(latest?.SupplyAirTemperature, SensorParameter.SupplyAirTemperature)</div></div></div>
+        <div class="col"><div class="gauge-tile"><div class="kpi-label">Return air</div><div class="gauge-value" data-field="returnAirTemperature">@Ui.Value(latest?.ReturnAirTemperature, SensorParameter.ReturnAirTemperature)</div></div></div>
+        <div class="col"><div class="gauge-tile"><div class="kpi-label">Humidity</div><div class="gauge-value" data-field="relativeHumidity">@Ui.Value(latest?.RelativeHumidity, SensorParameter.RelativeHumidity)</div></div></div>
+        <div class="col"><div class="gauge-tile"><div class="kpi-label">Supply fan</div><div class="gauge-value" data-field="fanSpeed">@Ui.Value(latest?.FanSpeed, SensorParameter.FanSpeed)</div></div></div>
+        <div class="col"><div class="gauge-tile"><div class="kpi-label">Filter ΔP</div><div class="gauge-value" data-field="filterPressureDrop">@Ui.Value(latest?.FilterPressureDrop, SensorParameter.FilterPressureDrop, "0")</div></div></div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <span><i class="bi bi-thermometer-half"></i> Temperatures (°C)</span>
+                    <span class="small text-secondary">last 30 min · live</span>
+                </div>
+                <div class="card-body"><canvas id="chart-temperature" height="220"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <span><i class="bi bi-fan"></i> Fan speed (%) &amp; filter ΔP (Pa)</span>
+                    <span class="small text-secondary">last 30 min · live</span>
+                </div>
+                <div class="card-body"><canvas id="chart-airflow" height="220"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bell"></i> Open alarms (@Model.OpenAlarms.Count)</span>
+                @if (User.CanOperate() && Model.OpenAlarms.Any(a => !a.IsAcknowledged))
+                {
+                    <form asp-controller="Alarms" asp-action="AcknowledgeAll" method="post">
+                        <input type="hidden" name="unitId" value="@u.Id" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button class="btn btn-sm btn-outline-warning">Acknowledge all</button>
+                    </form>
+                }
+            </div>
+            <ul class="list-group list-group-flush">
+                @if (Model.OpenAlarms.Count == 0)
+                {
+                    <li class="list-group-item text-secondary">No open alarms – unit operating normally.</li>
+                }
+                @foreach (var a in Model.OpenAlarms)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                            <span class="badge @Ui.SeverityBadge(a.Severity)"><i class="bi @Ui.SeverityIcon(a.Severity)"></i> @a.Severity</span>
+                            <span class="badge @Ui.AlarmStateBadge(a.State)">@a.State.DisplayName()</span>
+                            <div class="mt-1">@a.Message</div>
+                            <div class="small text-secondary">Raised @Ui.Utc(a.RaisedAt, "yyyy-MM-dd HH:mm:ss") · @Ui.Duration(a.Duration(now))</div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            @if (User.CanOperate() && !a.IsAcknowledged)
+                            {
+                                <form asp-controller="Alarms" asp-action="Acknowledge" asp-route-id="@a.Id" method="post">
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                    <button class="btn btn-sm btn-warning">Ack</button>
+                                </form>
+                            }
+                            @if (User.CanOperate())
+                            {
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="WorkOrders" asp-action="Create" asp-route-alarmId="@a.Id" title="Create work order"><i class="bi bi-wrench-adjustable"></i></a>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-wrench-adjustable"></i> Recent work orders</div>
+            <ul class="list-group list-group-flush">
+                @if (Model.WorkOrders.Count == 0)
+                {
+                    <li class="list-group-item text-secondary">No work orders for this unit.</li>
+                }
+                @foreach (var w in Model.WorkOrders)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <a asp-controller="WorkOrders" asp-action="Details" asp-route-id="@w.Id">@w.Number · @w.Title</a>
+                            <span class="badge @Ui.StatusBadge(w.Status)">@w.Status.DisplayName()</span>
+                        </div>
+                        <div class="small text-secondary">Due @Ui.Date(w.DueDate) · @(w.AssignedTo ?? "unassigned")</div>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header"><i class="bi bi-sliders"></i> Active alarm limits</div>
+            <ul class="list-group list-group-flush small">
+                @foreach (var r in Model.Rules)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@r.Name</span>
+                        <span><code>@r.Describe()</code> <span class="badge @Ui.SeverityBadge(r.Severity)">@r.Severity</span></span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="~/js/unit-details.js" asp-append-version="true"></script>
+}

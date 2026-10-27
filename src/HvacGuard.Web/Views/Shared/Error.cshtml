@@ -1,0 +1,14 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+<div class="text-center py-5">
+    <i class="bi bi-bug display-4 text-danger"></i>
+    <h1 class="h3 mt-3">Something went wrong</h1>
+    <p class="text-secondary">An unexpected error occurred while processing your request.</p>
+    @if (Model?.ShowRequestId == true)
+    {
+        <p class="small text-secondary">Request ID: <code>@Model.RequestId</code></p>
+    }
+    <a class="btn btn-primary" href="/">Back to dashboard</a>
+</div>

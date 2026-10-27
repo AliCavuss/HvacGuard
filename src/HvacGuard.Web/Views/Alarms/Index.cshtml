@@ -1,0 +1,103 @@
+@model AlarmListViewModel
+@{
+    ViewData["Title"] = "Active alarms";
+    var now = DateTime.UtcNow;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+<div class="page-header">
+    <div>
+        <h1>Active alarms</h1>
+        <p>Alarms that are still active or not yet acknowledged (ISA-18.2 life cycle). This list updates automatically.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="History"><i class="bi bi-clock-history"></i> History</a>
+        @if (User.CanOperate() && Model.Alarms.Any(a => !a.IsAcknowledged))
+        {
+            <form asp-action="AcknowledgeAll" method="post">
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <button class="btn btn-warning"><i class="bi bi-check2-all"></i> Acknowledge all</button>
+            </form>
+        }
+    </div>
+</div>
+
+<form method="get" class="filter-bar row g-2 align-items-end mb-3">
+    <div class="col-sm-4 col-lg-3">
+        <label class="form-label small" for="vesselId">Vessel</label>
+        <select class="form-select form-select-sm" id="vesselId" name="vesselId" asp-items="Model.VesselOptions">
+            <option value="">All vessels</option>
+        </select>
+    </div>
+    <div class="col-sm-4 col-lg-3">
+        <label class="form-label small" for="severity">Severity</label>
+        <select class="form-select form-select-sm" id="severity" name="severity" asp-items="Ui.EnumOptions<AlarmSeverity>(Model.Severity)">
+            <option value="">All severities</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i> Filter</button>
+        <a class="btn btn-sm btn-link" asp-action="Index">Reset</a>
+    </div>
+</form>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="alarm-table">
+            <thead>
+            <tr>
+                <th>Severity</th>
+                <th>State</th>
+                <th>Vessel / unit</th>
+                <th>Message</th>
+                <th>Raised</th>
+                <th>Duration</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Model.Alarms.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4"><i class="bi bi-check-circle text-success"></i> No open alarms.</td></tr>
+            }
+            @foreach (var a in Model.Alarms)
+            {
+                <tr data-alarm-id="@a.Id">
+                    <td><span class="badge @Ui.SeverityBadge(a.Severity)"><i class="bi @Ui.SeverityIcon(a.Severity)"></i> @a.Severity</span></td>
+                    <td><span class="badge @Ui.AlarmStateBadge(a.State)">@a.State.DisplayName()</span></td>
+                    <td>
+                        <a asp-controller="Units" asp-action="Details" asp-route-id="@a.UnitId">@a.Unit.Tag</a>
+                        <div class="small text-secondary">@a.Unit.Vessel.Name</div>
+                    </td>
+                    <td>@a.Message</td>
+                    <td class="text-nowrap small">@Ui.Utc(a.RaisedAt, "MM-dd HH:mm:ss")</td>
+                    <td class="text-nowrap small">@Ui.Duration(a.Duration(now))</td>
+                    <td class="text-end text-nowrap">
+                        @if (User.CanOperate())
+                        {
+                            if (!a.IsAcknowledged)
+                            {
+                                <form asp-action="Acknowledge" asp-route-id="@a.Id" method="post" class="d-inline">
+                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                    <button class="btn btn-sm btn-warning">Ack</button>
+                                </form>
+                            }
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="WorkOrders" asp-action="Create" asp-route-alarmId="@a.Id" title="Create work order"><i class="bi bi-wrench-adjustable"></i></a>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Re-load the list when alarms change (debounced) – keeps the server as the single source of truth.
+        (function () {
+            let timer;
+            const reload = () => { clearTimeout(timer); timer = setTimeout(() => location.reload(), 1500); };
+            ['alarmRaised', 'alarmCleared', 'alarmAcknowledged'].forEach(e => window.hvac.on(e, reload));
+        })();
+    </script>
+}

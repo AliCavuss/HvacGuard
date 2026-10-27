@@ -1,0 +1,68 @@
+@model AlarmRuleFormModel
+@{
+    var isEdit = Model.Id.HasValue;
+    ViewData["Title"] = isEdit ? "Edit alarm rule" : "New alarm rule";
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Alarm rules</a></li>
+        <li class="breadcrumb-item active">@ViewData["Title"]</li>
+    </ol>
+</nav>
+
+<div class="page-header"><div><h1>@ViewData["Title"]</h1></div></div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Supply air temperature high" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Parameter" class="form-label"></label>
+                    <select asp-for="Parameter" asp-items="Ui.EnumOptions<SensorParameter>(Model.Parameter)" class="form-select"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Severity" class="form-label"></label>
+                    <select asp-for="Severity" asp-items="Ui.EnumOptions<AlarmSeverity>(Model.Severity)" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Condition" class="form-label"></label>
+                    <select asp-for="Condition" asp-items="Ui.EnumOptions<ThresholdCondition>(Model.Condition)" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Threshold" class="form-label"></label>
+                    <input asp-for="Threshold" class="form-control" step="0.1" />
+                    <span asp-validation-for="Threshold" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Deadband" class="form-label"></label>
+                    <input asp-for="Deadband" class="form-control" step="0.1" />
+                    <span asp-validation-for="Deadband" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input asp-for="IsEnabled" class="form-check-input" role="switch" />
+                        <label asp-for="IsEnabled" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-secondary small mt-4 mb-0">
+                <i class="bi bi-lightbulb"></i> Example: <em>Above 22 °C with deadband 0.5</em> raises the alarm at 22.1 °C and clears it
+                only when the value drops to 21.5 °C or lower.
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

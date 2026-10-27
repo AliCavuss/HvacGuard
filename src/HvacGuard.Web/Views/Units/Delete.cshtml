@@ -1,0 +1,18 @@
+@model AirHandlingUnit
+@{
+    ViewData["Title"] = $"Delete {Model.Tag}";
+}
+<div class="card form-card border-danger">
+    <div class="card-body">
+        <h1 class="h4"><i class="bi bi-exclamation-triangle text-danger"></i> Delete @Model.Tag – @Model.Name?</h1>
+        <p class="text-secondary">
+            The unit on <strong>@Model.Vessel.Name</strong> will be removed together with its telemetry history,
+            alarms and work orders. Consider marking it as <em>inactive</em> instead to keep the history.
+        </p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete permanently</button>
+            <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@Model.Id">Mark inactive instead</a>
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
+        </form>
+    </div>
+</div>

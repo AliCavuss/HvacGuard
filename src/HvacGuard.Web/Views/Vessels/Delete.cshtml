@@ -1,0 +1,17 @@
+@model Vessel
+@{
+    ViewData["Title"] = $"Delete {Model.Name}";
+}
+<div class="card form-card border-danger">
+    <div class="card-body">
+        <h1 class="h4"><i class="bi bi-exclamation-triangle text-danger"></i> Delete vessel “@Model.Name”?</h1>
+        <p class="text-secondary">
+            This permanently deletes the vessel, all of its air handling units, their telemetry history, alarms and work orders.
+            This cannot be undone.
+        </p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete permanently</button>
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
+        </form>
+    </div>
+</div>

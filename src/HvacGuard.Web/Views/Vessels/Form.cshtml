@@ -1,0 +1,69 @@
+@model VesselFormModel
+@{
+    var isEdit = Model.Id.HasValue;
+    ViewData["Title"] = isEdit ? $"Edit {Model.Name}" : "Add vessel";
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Fleet</a></li>
+        @if (isEdit)
+        {
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li>
+        }
+        <li class="breadcrumb-item active">@(isEdit ? "Edit" : "New vessel")</li>
+    </ol>
+</nav>
+
+<div class="page-header"><div><h1>@ViewData["Title"]</h1></div></div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g. Aurora Spirit" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ImoNumber" class="form-label"></label>
+                    <input asp-for="ImoNumber" class="form-control font-monospace" placeholder="9074729" maxlength="11" />
+                    <span asp-validation-for="ImoNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="VesselType" class="form-label"></label>
+                    <input asp-for="VesselType" class="form-control" list="vessel-types" />
+                    <datalist id="vessel-types">
+                        <option value="Ro-Pax Ferry"></option>
+                        <option value="Cruise Ship"></option>
+                        <option value="LNG Carrier"></option>
+                        <option value="Chemical Tanker"></option>
+                        <option value="Container Ship"></option>
+                        <option value="Offshore Support Vessel"></option>
+                        <option value="Yacht"></option>
+                    </datalist>
+                    <span asp-validation-for="VesselType" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Flag" class="form-label"></label>
+                    <input asp-for="Flag" class="form-control" />
+                    <span asp-validation-for="Flag" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Owner" class="form-label"></label>
+                    <input asp-for="Owner" class="form-control" />
+                    <span asp-validation-for="Owner" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a class="btn btn-outline-secondary" asp-action="@(isEdit ? "Details" : "Index")" asp-route-id="@Model.Id">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,33 @@
+@model UnitStatusDto
+@{
+    var now = DateTime.UtcNow;
+    var online = Model.IsOnline(now);
+    var latest = Model.Latest;
+}
+<div class="col">
+    <a class="unit-card @Ui.UnitStateClass(Model.IsActive, online, Model.HighestActiveSeverity)"
+       asp-controller="Units" asp-action="Details" asp-route-id="@Model.Id"
+       data-unit-id="@Model.Id" data-last-seen="@(Model.LastSeenAt?.ToString("o"))">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="unit-tag">@Model.Tag</div>
+                <div class="unit-name">@Model.Name</div>
+                <div class="unit-vessel"><i class="bi bi-water"></i> @Model.VesselName · @Model.Location</div>
+            </div>
+            <span class="state-pill" data-field="state">
+                @(!Model.IsActive ? "Inactive" : !online ? "Offline" : Model.HighestActiveSeverity?.ToString() ?? "Normal")
+            </span>
+        </div>
+        <div class="unit-metrics">
+            <div><span class="metric-label">Supply</span><span class="metric-value" data-field="supplyAirTemperature">@Ui.Value(latest?.SupplyAirTemperature, SensorParameter.SupplyAirTemperature)</span></div>
+            <div><span class="metric-label">Return</span><span class="metric-value" data-field="returnAirTemperature">@Ui.Value(latest?.ReturnAirTemperature, SensorParameter.ReturnAirTemperature)</span></div>
+            <div><span class="metric-label">RH</span><span class="metric-value" data-field="relativeHumidity">@Ui.Value(latest?.RelativeHumidity, SensorParameter.RelativeHumidity)</span></div>
+            <div><span class="metric-label">Fan</span><span class="metric-value" data-field="fanSpeed">@Ui.Value(latest?.FanSpeed, SensorParameter.FanSpeed)</span></div>
+            <div><span class="metric-label">Filter ΔP</span><span class="metric-value" data-field="filterPressureDrop">@Ui.Value(latest?.FilterPressureDrop, SensorParameter.FilterPressureDrop, "0")</span></div>
+            <div><span class="metric-label">Alarms</span><span class="metric-value" data-field="openAlarmCount">@Model.OpenAlarmCount</span></div>
+        </div>
+        <div class="unit-footer small text-secondary">
+            Setpoint @Model.SupplyTempSetpoint.ToString("0.0") °C · updated <span data-field="lastSeen">@Ui.Ago(Model.LastSeenAt, now)</span>
+        </div>
+    </a>
+</div>
